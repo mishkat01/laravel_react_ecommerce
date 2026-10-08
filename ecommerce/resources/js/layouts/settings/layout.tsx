@@ -11,6 +11,12 @@ import { edit as editSecurity } from '@/routes/security';
 import { index as teams } from '@/routes/teams';
 import type { NavItem } from '@/types';
 
+/**
+ * Settings Navigation Links Configuration
+ *
+ * Uses type-safe Wayfinder route functions (`edit()`, `editSecurity()`, etc.)
+ * to reference Laravel routes without hardcoding URL strings.
+ */
 const sidebarNavItems: NavItem[] = [
     {
         title: 'Profile',
@@ -34,17 +40,34 @@ const sidebarNavItems: NavItem[] = [
     },
 ];
 
+/**
+ * SettingsLayout Component
+ *
+ * A nested layout shared across all `/settings/*` pages:
+ * - Profile (`settings/profile`)
+ * - Security (`settings/security`)
+ * - Teams (`settings/teams`)
+ * - Appearance (`settings/appearance`)
+ *
+ * Key React + Inertia Concepts:
+ * 1. Nested Layout: In `app.tsx`, pages starting with `settings/` use `[AppLayout, SettingsLayout]`.
+ * 2. Active Tab Detection: `useCurrentUrl().isCurrentOrParentUrl(href)` dynamically highlights the active nav button.
+ * 3. Client-Side Navigation: `<Button asChild><Link href={...}>` renders an Inertia SPA link
+ *    styled with shadcn button utilities.
+ */
 export default function SettingsLayout({ children }: PropsWithChildren) {
     const { isCurrentOrParentUrl } = useCurrentUrl();
 
     return (
         <div className="px-4 py-6">
+            {/* Common Settings Header */}
             <Heading
                 title="Settings"
                 description="Manage your profile and account settings"
             />
 
             <div className="flex flex-col lg:flex-row lg:space-x-12">
+                {/* Secondary navigation sidebar */}
                 <aside className="w-full max-w-xl lg:w-48">
                     <nav
                         className="flex flex-col space-y-1 space-x-0"
@@ -57,9 +80,10 @@ export default function SettingsLayout({ children }: PropsWithChildren) {
                                 variant="ghost"
                                 asChild
                                 className={cn('w-full justify-start', {
-                                    'bg-muted': isCurrentOrParentUrl(item.href),
+                                    'bg-muted font-medium': isCurrentOrParentUrl(item.href),
                                 })}
                             >
+                                {/* Inertia Link prevents page reloads and swaps page props via AJAX */}
                                 <Link href={item.href}>
                                     {item.icon && (
                                         <item.icon className="h-4 w-4" />
@@ -73,6 +97,7 @@ export default function SettingsLayout({ children }: PropsWithChildren) {
 
                 <Separator className="my-6 lg:hidden" />
 
+                {/* Sub-page content rendered here */}
                 <div className="flex-1 md:max-w-2xl">
                     <section className="max-w-xl space-y-12">
                         {children}
@@ -82,3 +107,4 @@ export default function SettingsLayout({ children }: PropsWithChildren) {
         </div>
     );
 }
+

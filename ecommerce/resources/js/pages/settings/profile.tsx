@@ -15,6 +15,19 @@ type PageProps = {
     auth: Auth;
 };
 
+/**
+ * Profile Settings Page
+ *
+ * Renders user information form (name, email) and account deletion controls.
+ *
+ * Key React + Inertia Concepts:
+ * 1. `usePage<PageProps>().props`: Accesses global shared data provided by Laravel's
+ *    `HandleInertiaRequests` middleware without prop-drilling!
+ * 2. `preserveScroll: true`: When the form saves and redirects back, Inertia maintains
+ *    the exact scroll position rather than scrolling to the top of the window.
+ * 3. Email Verification Prompt: If email verification is enabled and pending, renders
+ *    a link to trigger resending verification notification email.
+ */
 export default function Profile({
     mustVerifyEmail,
     status,
@@ -22,6 +35,7 @@ export default function Profile({
     mustVerifyEmail: boolean;
     status?: string;
 }) {
+    // Read current user data from global Inertia page props
     const { auth } = usePage<PageProps>().props;
 
     return (
@@ -37,6 +51,7 @@ export default function Profile({
                     description="Update your name and email address"
                 />
 
+                {/* Profile update form targeting ProfileController::update */}
                 <Form
                     {...ProfileController.update.form()}
                     options={{
@@ -46,6 +61,7 @@ export default function Profile({
                 >
                     {({ processing, errors }) => (
                         <>
+                            {/* Name input */}
                             <div className="grid gap-2">
                                 <Label htmlFor="name">Name</Label>
 
@@ -65,6 +81,7 @@ export default function Profile({
                                 />
                             </div>
 
+                            {/* Email input */}
                             <div className="grid gap-2">
                                 <Label htmlFor="email">Email address</Label>
 
@@ -85,6 +102,7 @@ export default function Profile({
                                 />
                             </div>
 
+                            {/* Unverified email notification prompt */}
                             {mustVerifyEmail &&
                                 auth.user.email_verified_at === null && (
                                     <div>
@@ -110,6 +128,7 @@ export default function Profile({
                                     </div>
                                 )}
 
+                            {/* Submit Button */}
                             <div className="flex items-center gap-4">
                                 <Button
                                     disabled={processing}
@@ -123,11 +142,15 @@ export default function Profile({
                 </Form>
             </div>
 
+            {/* Account deletion modal */}
             <DeleteUser />
         </>
     );
 }
 
+/**
+ * Breadcrumbs configuration for persistent AppLayout
+ */
 Profile.layout = {
     breadcrumbs: [
         {
@@ -136,3 +159,4 @@ Profile.layout = {
         },
     ],
 };
+

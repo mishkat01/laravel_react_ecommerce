@@ -17,7 +17,26 @@ import { LandingQuickViewModal } from '@/components/landing/landing-quick-view-m
 import { LandingTestimonials } from '@/components/landing/landing-testimonials';
 import type { CartItem, Product } from '@/components/landing/types';
 
+/**
+ * Welcome Page Component (E-Commerce Storefront)
+ *
+ * This is the public landing page served by `Route::inertia('/', 'welcome')` in `routes/web.php`.
+ *
+ * Core React Concepts Demonstrated:
+ * 1. **Lazy State Initialization**: `useState(() => ...)` only runs on the initial render,
+ *    preventing expensive JSON parsing on every re-render.
+ * 2. **Client-Side Persistence**: `useEffect` listens for cart/wishlist changes and syncs to `localStorage`.
+ * 3. **Immutable State Updates**: Using functional updater patterns `setCart(prev => ...)` to ensure
+ *    state integrity without mutating existing arrays or objects.
+ * 4. **Component Composition**: Orchestrates modular UI components (Hero, Grid, Cart Drawer, Checkout Dialog).
+ * 5. **Interactive UI Feedback**: Uses Sonner toasts with action callbacks (e.g. "View Bag").
+ */
 export default function Welcome() {
+    /**
+     * Shopping Cart State
+     * Stored as an array of CartItem objects (product, quantity, selectedColor).
+     * Hydrated from localStorage if available.
+     */
     const [cart, setCart] = useState<CartItem[]>(() => {
         if (typeof window !== 'undefined') {
             try {
@@ -30,6 +49,10 @@ export default function Welcome() {
         return [];
     });
 
+    /**
+     * Wishlist State
+     * Array of product IDs that the user has marked as favorite.
+     */
     const [wishlist, setWishlist] = useState<string[]>(() => {
         if (typeof window !== 'undefined') {
             try {
@@ -42,37 +65,53 @@ export default function Welcome() {
         return [];
     });
 
+    // Active category filter (e.g. 'all', 'apparel', 'living', 'sale')
     const [activeCategory, setActiveCategory] = useState<string>('all');
+
+    // Search query entered in the navigation search input
     const [searchQuery, setSearchQuery] = useState<string>('');
+
+    // Modal and Drawer visibility states
     const [cartDrawerOpen, setCartDrawerOpen] = useState(false);
     const [quickViewProduct, setQuickViewProduct] = useState<Product | null>(null);
     const [checkoutOpen, setCheckoutOpen] = useState(false);
 
-    // Save cart state
+    /**
+     * Side Effect: Persist cart to localStorage whenever `cart` state changes
+     */
     useEffect(() => {
         try {
             localStorage.setItem('aura_cart_v1', JSON.stringify(cart));
         } catch {
-            // ignore storage errors
+            // Ignore storage quota or disabled storage errors
         }
     }, [cart]);
 
-    // Save wishlist state
+    /**
+     * Side Effect: Persist wishlist to localStorage whenever `wishlist` state changes
+     */
     useEffect(() => {
         try {
             localStorage.setItem('aura_wishlist_v1', JSON.stringify(wishlist));
         } catch {
-            // ignore storage errors
+            // Ignore storage quota errors
         }
     }, [wishlist]);
 
+    /**
+     * Add a product to the cart.
+     * If the product with the same color variant already exists, increment its quantity;
+     * otherwise, append a new CartItem.
+     */
     const handleAddToCart = (
         product: Product,
         selectedColor?: string,
         quantity: number = 1
     ) => {
         const color = selectedColor || product.colors?.[0]?.name;
+
         setCart((prevCart) => {
+            // Find if item already exists with matching ID and color
             const existingIndex = prevCart.findIndex(
                 (item) =>
                     item.product.id === product.id &&
@@ -80,14 +119,17 @@ export default function Welcome() {
             );
 
             if (existingIndex > -1) {
+                // Return new array with cloned and updated item (immutability)
                 const updated = [...prevCart];
                 updated[existingIndex].quantity += quantity;
                 return updated;
             } else {
+                // Add new item to cart
                 return [...prevCart, { product, quantity, selectedColor: color }];
             }
         });
 
+        // Trigger interactive toast notification with action button
         toast.success(`Added ${product.name} to bag`, {
             description: `${quantity}x ${color ? `(${color})` : ''} • \$${product.price * quantity}`,
             action: {
@@ -97,6 +139,10 @@ export default function Welcome() {
         });
     };
 
+    /**
+     * Update quantity for a given item in the cart.
+     * If quantity reaches 0, removes the item.
+     */
     const handleUpdateQuantity = (productId: string, quantity: number) => {
         if (quantity <= 0) {
             handleRemoveItem(productId);
@@ -109,16 +155,25 @@ export default function Welcome() {
         );
     };
 
+    /**
+     * Remove an item from the cart by its product ID.
+     */
     const handleRemoveItem = (productId: string) => {
         setCart((prev) => prev.filter((item) => item.product.id !== productId));
         toast('Item removed from bag');
     };
 
+    /**
+     * Clear all items from the cart.
+     */
     const handleClearCart = () => {
         setCart([]);
         toast('Shopping bag cleared');
     };
 
+    /**
+     * Toggle a product in/out of the user's wishlist.
+     */
     const handleToggleWishlist = (productId: string) => {
         const target = PRODUCTS.find((p) => p.id === productId);
         setWishlist((prev) => {
@@ -137,6 +192,9 @@ export default function Welcome() {
         });
     };
 
+    /**
+     * Switch view to all products and smoothly scroll down to the product catalog.
+     */
     const handleOpenWishlist = () => {
         if (wishlist.length === 0) {
             toast('Your wishlist is empty', {
@@ -144,7 +202,6 @@ export default function Welcome() {
             });
             return;
         }
-        // Switch to all category and scroll to products
         setActiveCategory('all');
         const el = document.getElementById('products');
         if (el) {
@@ -153,6 +210,9 @@ export default function Welcome() {
         toast.info(`You have ${wishlist.length} item(s) in your wishlist`);
     };
 
+    /**
+     * Filter by category and scroll to product grid
+     */
     const handleCategorySelect = (categorySlug: string) => {
         setActiveCategory(categorySlug);
         const el = document.getElementById('products');
@@ -161,6 +221,9 @@ export default function Welcome() {
         }
     };
 
+    /**
+     * Smooth scroll helper to navigate directly to products section
+     */
     const handleScrollToProducts = () => {
         const el = document.getElementById('products');
         if (el) {
@@ -168,6 +231,9 @@ export default function Welcome() {
         }
     };
 
+    /**
+     * Filter to 'sale' category and scroll to deals
+     */
     const handleScrollToDeals = () => {
         setActiveCategory('sale');
         const el = document.getElementById('products');
@@ -176,12 +242,18 @@ export default function Welcome() {
         }
     };
 
+    /**
+     * Newsletter submission handler
+     */
     const handleNewsletterSubscribe = (email: string) => {
         toast.success('VIP Code Unlocked: ELEVATE20', {
             description: `We've emailed your $20 gift code to ${email}.`,
         });
     };
 
+    /**
+     * Checkout completion handler: clears the cart and displays confirmation toast
+     */
     const handleOrderSuccess = () => {
         setCart([]);
         toast.success('Order Successfully Confirmed! 🎉', {
@@ -191,9 +263,10 @@ export default function Welcome() {
 
     return (
         <div className="min-h-screen bg-background text-foreground antialiased selection:bg-primary selection:text-primary-foreground font-sans">
+            {/* Inertia Head: Injects dynamic browser title */}
             <Head title="Aura Atelier — Curated Essentials for Modern Living" />
 
-            {/* Navigation Header */}
+            {/* Navigation Header with search, wishlist counter, and cart badge */}
             <LandingNav
                 cart={cart}
                 wishlist={wishlist}
@@ -205,7 +278,7 @@ export default function Welcome() {
             />
 
             <main>
-                {/* Hero Section */}
+                {/* Hero Section with featured product and CTA buttons */}
                 <LandingHero
                     onAddToCart={handleAddToCart}
                     onExploreClick={handleScrollToProducts}
@@ -217,7 +290,7 @@ export default function Welcome() {
                 {/* Visual Category Showcase */}
                 <LandingCategories onSelectCategory={handleCategorySelect} />
 
-                {/* Main Interactive Product Grid */}
+                {/* Main Interactive Product Grid (sorting, filtering, badges) */}
                 <LandingProductGrid
                     activeCategory={activeCategory}
                     onCategoryChange={setActiveCategory}
@@ -229,20 +302,20 @@ export default function Welcome() {
                     onAddToCart={handleAddToCart}
                 />
 
-                {/* Flash Deal Banner */}
+                {/* Flash Deal Banner with countdown */}
                 <LandingDealBanner onShopDeals={handleScrollToDeals} />
 
                 {/* Testimonials & Press Mentions */}
                 <LandingTestimonials />
 
-                {/* VIP Newsletter */}
+                {/* VIP Newsletter subscription */}
                 <LandingNewsletter onSubscribe={handleNewsletterSubscribe} />
             </main>
 
-            {/* Comprehensive Footer */}
+            {/* Comprehensive Store Footer */}
             <LandingFooter />
 
-            {/* Interactive Cart Drawer */}
+            {/* Slide-over Cart Drawer */}
             <LandingCartDrawer
                 open={cartDrawerOpen}
                 onOpenChange={setCartDrawerOpen}
@@ -253,7 +326,7 @@ export default function Welcome() {
                 onProceedCheckout={() => setCheckoutOpen(true)}
             />
 
-            {/* Quick View Modal */}
+            {/* Quick View Modal for previewing product details */}
             <LandingQuickViewModal
                 product={quickViewProduct}
                 open={quickViewProduct !== null}
@@ -263,7 +336,7 @@ export default function Welcome() {
                 onAddToCart={handleAddToCart}
             />
 
-            {/* Checkout Dialog */}
+            {/* Simulated Multi-Step Checkout Modal */}
             <LandingCheckoutDialog
                 open={checkoutOpen}
                 onOpenChange={setCheckoutOpen}
@@ -273,3 +346,4 @@ export default function Welcome() {
         </div>
     );
 }
+

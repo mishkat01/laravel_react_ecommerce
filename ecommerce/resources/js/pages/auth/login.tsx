@@ -14,12 +14,28 @@ import { request } from '@/routes/password';
 import PasskeyVerify from '@/components/passkey-verify';
 import type { TeamInvitationContext } from '@/types';
 
+/**
+ * Login Component Props
+ * Injected by Laravel Fortify's `LoginViewResponse`.
+ */
 type Props = {
-    status?: string;
-    canResetPassword: boolean;
-    teamInvitation?: TeamInvitationContext | null;
+    status?: string;                         // Session flash status (e.g. "Your password has been reset")
+    canResetPassword: boolean;              // Flag indicating if password reset route is enabled
+    teamInvitation?: TeamInvitationContext | null; // Context if user arrived via invitation URL
 };
 
+/**
+ * Login Page Component
+ *
+ * Demonstrates:
+ * 1. **Inertia v3 `<Form>` Component**:
+ *    Instead of manual `useForm` hooks, Inertia v3 provides `<Form {...store.form()}>`,
+ *    which automatically connects HTML inputs by `name`, tracks submission `processing`,
+ *    and maps backend validation `errors`!
+ * 2. **Passkey Verification**: `<PasskeyVerify />` enables biometric WebAuthn logins.
+ * 3. **Persistent Layout Properties**: `Login.layout = { title, description }` supplies
+ *    card headers to the surrounding `AuthLayout`.
+ */
 export default function Login({
     status,
     canResetPassword,
@@ -27,8 +43,10 @@ export default function Login({
 }: Props) {
     return (
         <>
+            {/* Updates browser title to "Log in - Laravel" */}
             <Head title="Log in" />
 
+            {/* If user clicked a team invitation link, display which team they are joining */}
             {teamInvitation && (
                 <TeamInvitationAlert
                     invitation={teamInvitation}
@@ -36,8 +54,15 @@ export default function Login({
                 />
             )}
 
+            {/* WebAuthn / Passkey biometric login button */}
             <PasskeyVerify />
 
+            {/*
+                Inertia v3 Form:
+                - `store.form()`: Wayfinder helper supplying HTTP POST action `/login`
+                - `resetOnSuccess`: Clears sensitive password field after successful post
+                - Render-prop provides `{ processing, errors }`
+            */}
             <Form
                 {...store.form()}
                 resetOnSuccess={['password']}
@@ -46,6 +71,7 @@ export default function Login({
                 {({ processing, errors }) => (
                     <>
                         <div className="grid gap-6">
+                            {/* Email Field */}
                             <div className="grid gap-2">
                                 <Label htmlFor="email">Email address</Label>
                                 <Input
@@ -58,9 +84,11 @@ export default function Login({
                                     autoComplete="email"
                                     placeholder="email@example.com"
                                 />
+                                {/* Renders Laravel validation error if email is invalid */}
                                 <InputError message={errors.email} />
                             </div>
 
+                            {/* Password Field */}
                             <div className="grid gap-2">
                                 <div className="flex items-center">
                                     <Label htmlFor="password">Password</Label>
@@ -85,6 +113,7 @@ export default function Login({
                                 <InputError message={errors.password} />
                             </div>
 
+                            {/* "Remember me" session cookie checkbox */}
                             <div className="flex items-center space-x-3">
                                 <Checkbox
                                     id="remember"
@@ -94,6 +123,7 @@ export default function Login({
                                 <Label htmlFor="remember">Remember me</Label>
                             </div>
 
+                            {/* Submit Button with animated spinner while processing */}
                             <Button
                                 type="submit"
                                 className="mt-4 w-full"
@@ -106,6 +136,7 @@ export default function Login({
                             </Button>
                         </div>
 
+                        {/* Sign up redirect with invitation code preserved */}
                         <div className="text-center text-sm text-muted-foreground">
                             Don't have an account?{' '}
                             <TextLink
@@ -124,6 +155,7 @@ export default function Login({
                 )}
             </Form>
 
+            {/* Flash status banner (e.g., password reset confirmation) */}
             {status && (
                 <div className="mb-4 text-center text-sm font-medium text-green-600">
                     {status}
@@ -133,7 +165,12 @@ export default function Login({
     );
 }
 
+/**
+ * AuthLayout metadata configuration
+ * Injected into `AuthLayout` via Inertia layout resolver in `resources/js/app.tsx`.
+ */
 Login.layout = {
     title: 'Log in to your account',
     description: 'Enter your email and password below to log in',
 };
+

@@ -11,16 +11,31 @@ use Inertia\Inertia;
 use Inertia\Response;
 use Laravel\Fortify\Features;
 
+/**
+ * SecurityController
+ *
+ * Manages user authentication credentials and multi-factor security:
+ * - Password updates (`update`)
+ * - Two-Factor Authentication (2FA) status and QR code setup
+ * - WebAuthn / Passkeys listing and enrollment (`edit`)
+ *
+ * Leverages Laravel Fortify for modern authentication features.
+ */
 class SecurityController extends Controller
 {
     /**
      * Show the user's security settings page.
+     *
+     * @param  TwoFactorAuthenticationRequest  $request  Validates and sanitizes 2FA session requirements.
+     * @return Response Renders `resources/js/pages/settings/security.tsx`.
      */
     public function edit(TwoFactorAuthenticationRequest $request): Response
     {
+        // Assemble props determining which security features are enabled in Fortify config
         $props = [
             'canManageTwoFactor' => Features::canManageTwoFactorAuthentication(),
             'canManagePasskeys' => Features::canManagePasskeys(),
+            // Passkeys: biometric / hardware security keys registered by the user
             'passkeys' => Features::canManagePasskeys()
                 ? $request->user()
                     ->passkeys()
@@ -37,9 +52,11 @@ class SecurityController extends Controller
                     ->values()
                     ->all()
                 : [],
+            // Human-readable string of password rules (e.g. min 8 chars, mixed case, symbols)
             'passwordRules' => Password::defaults()->toPasswordRulesString(),
         ];
 
+        // If Two-Factor Authentication is enabled in fortify.php, check user's status
         if (Features::canManageTwoFactorAuthentication()) {
             $request->ensureStateIsValid();
 
@@ -52,9 +69,13 @@ class SecurityController extends Controller
 
     /**
      * Update the user's password.
+     *
+     * @param  PasswordUpdateRequest  $request  Validates current password and new password rules.
+     * @return RedirectResponse Redirects back to previous page with success toast.
      */
     public function update(PasswordUpdateRequest $request): RedirectResponse
     {
+        // Eloquent 'hashed' cast automatically handles bcrypt/argon2 hashing
         $request->user()->update([
             'password' => $request->password,
         ]);

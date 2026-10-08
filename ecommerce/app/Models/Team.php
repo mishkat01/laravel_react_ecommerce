@@ -15,6 +15,16 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Carbon;
 
 /**
+ * Team Model
+ *
+ * Represents an organization, workspace, or company unit in the application.
+ *
+ * Educational points:
+ * 1. Multi-tenancy: Users can belong to multiple teams with different roles (Owner, Admin, Member).
+ * 2. Slugs & Route Model Binding: Uses `getRouteKeyName() = 'slug'` so URLs look clean (e.g. `/my-team/dashboard`).
+ * 3. Lifecycle Hooks (`boot`): Automatically generates URL-safe unique slugs on create/update.
+ * 4. Custom Pivot (`using(Membership::class)`): Allows attaching typed methods and casts to the relation pivot.
+ *
  * @property int $id
  * @property string $name
  * @property string $slug
@@ -33,18 +43,20 @@ class Team extends Model
     use GeneratesUniqueTeamSlugs, HasFactory, SoftDeletes;
 
     /**
-     * Bootstrap the model and its traits.
+     * Bootstrap the model and register Eloquent event listeners.
      */
     protected static function boot(): void
     {
         parent::boot();
 
+        // Automatically slugify the team name before inserting into the database
         static::creating(function (Team $team) {
             if (empty($team->slug)) {
                 $team->slug = static::generateUniqueTeamSlug($team->name);
             }
         });
 
+        // If the team name is edited, re-generate a unique URL-friendly slug
         static::updating(function (Team $team) {
             if ($team->isDirty('name')) {
                 $team->slug = static::generateUniqueTeamSlug($team->name, $team->id);
@@ -53,7 +65,7 @@ class Team extends Model
     }
 
     /**
-     * Get the team owner.
+     * Get the team owner (the member holding the Owner role).
      */
     public function owner(): ?Model
     {
@@ -63,7 +75,8 @@ class Team extends Model
     }
 
     /**
-     * Get all members of this team.
+     * Many-to-Many relationship with Users who belong to this team.
+     * Uses custom pivot class `Membership` to manage roles.
      *
      * @return BelongsToMany<User, $this, Membership, 'pivot'>
      */
@@ -76,7 +89,7 @@ class Team extends Model
     }
 
     /**
-     * Get all memberships for this team.
+     * One-to-Many relationship directly accessing the membership pivot records.
      *
      * @return HasMany<Membership, $this>
      */
@@ -86,7 +99,7 @@ class Team extends Model
     }
 
     /**
-     * Get all invitations for this team.
+     * One-to-Many relationship with pending invitations sent by this team.
      *
      * @return HasMany<TeamInvitation, $this>
      */
@@ -96,7 +109,7 @@ class Team extends Model
     }
 
     /**
-     * Get the attributes that should be cast.
+     * Attribute casting configuration.
      *
      * @return array<string, string>
      */
@@ -108,7 +121,8 @@ class Team extends Model
     }
 
     /**
-     * Get the route key for the model.
+     * Route Model Binding Key.
+     * Tells Laravel to resolve this model by its `slug` column rather than primary key `id`.
      */
     public function getRouteKeyName(): string
     {

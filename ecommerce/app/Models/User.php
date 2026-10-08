@@ -17,6 +17,18 @@ use Laravel\Fortify\PasskeyAuthenticatable;
 use Laravel\Fortify\TwoFactorAuthenticatable;
 
 /**
+ * User Model
+ *
+ * Represents an authenticated user in the system.
+ *
+ * Key Concepts for React + Laravel developers:
+ * 1. PHP 8 Attributes: `#[Fillable]` and `#[Hidden]` replace traditional class properties.
+ * 2. Inertia Security: Attributes marked `#[Hidden]` (passwords, 2FA secrets) are NEVER
+ *    serialized into JSON props sent to React.
+ * 3. `PasskeyUser` & `PasskeyAuthenticatable`: Enables biometric / WebAuthn passwordless logins.
+ * 4. `TwoFactorAuthenticatable`: Fortify trait managing TOTP secrets and recovery codes.
+ * 5. `HasTeams`: Custom trait handling team ownership, roles, and memberships.
+ *
  * @property int $id
  * @property string $name
  * @property string $email
@@ -42,7 +54,11 @@ class User extends Authenticatable implements MustVerifyEmail, PasskeyUser
     use HasFactory, HasTeams, Notifiable, PasskeyAuthenticatable, TwoFactorAuthenticatable;
 
     /**
-     * Get the attributes that should be cast.
+     * Get the attributes that should be cast to native types.
+     *
+     * - 'email_verified_at' => Carbon datetime instance
+     * - 'password' => 'hashed' automatically applies Bcrypt/Argon2 hashing on write
+     * - 'two_factor_confirmed_at' => Carbon datetime instance
      *
      * @return array<string, string>
      */

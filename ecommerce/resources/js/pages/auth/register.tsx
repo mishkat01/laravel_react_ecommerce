@@ -11,15 +11,36 @@ import { login } from '@/routes';
 import { store } from '@/routes/register';
 import type { TeamInvitationContext } from '@/types';
 
+/**
+ * Props passed to Register page
+ */
 type Props = {
-    passwordRules: string;
-    teamInvitation?: TeamInvitationContext | null;
+    passwordRules: string;                          // Password complexity rules string from backend
+    teamInvitation?: TeamInvitationContext | null; // Optional team invitation context if invited
 };
 
+/**
+ * Register Page Component
+ *
+ * Handles new user sign-up in the React application.
+ *
+ * Backend Lifecycle:
+ * 1. Submits POST request to `/register` via `store.form()`.
+ * 2. Fortify invokes `App\Actions\Fortify\CreateNewUser::create()`.
+ * 3. User is created and their default personal team is automatically provisioned in a DB transaction.
+ * 4. User is logged in and redirected to their personal dashboard.
+ */
 export default function Register({ passwordRules, teamInvitation }: Props) {
     return (
         <>
             <Head title="Register" />
+
+            {/*
+                Inertia v3 Form component:
+                - `store.form()`: supplies POST action to `/register`
+                - `resetOnSuccess`: clears sensitive password fields after account creation
+                - `disableWhileProcessing`: prevents multiple submissions while waiting for server response
+            */}
             <Form
                 {...store.form()}
                 resetOnSuccess={['password', 'password_confirmation']}
@@ -28,6 +49,7 @@ export default function Register({ passwordRules, teamInvitation }: Props) {
             >
                 {({ processing, errors }) => (
                     <>
+                        {/* Notice shown if registering via a team invitation */}
                         {teamInvitation && (
                             <TeamInvitationAlert
                                 invitation={teamInvitation}
@@ -36,6 +58,7 @@ export default function Register({ passwordRules, teamInvitation }: Props) {
                         )}
 
                         <div className="grid gap-6">
+                            {/* Full Name */}
                             <div className="grid gap-2">
                                 <Label htmlFor="name">Name</Label>
                                 <Input
@@ -54,6 +77,7 @@ export default function Register({ passwordRules, teamInvitation }: Props) {
                                 />
                             </div>
 
+                            {/* Email Address */}
                             <div className="grid gap-2">
                                 <Label htmlFor="email">Email address</Label>
                                 <Input
@@ -68,6 +92,7 @@ export default function Register({ passwordRules, teamInvitation }: Props) {
                                 <InputError message={errors.email} />
                             </div>
 
+                            {/* Password */}
                             <div className="grid gap-2">
                                 <Label htmlFor="password">Password</Label>
                                 <PasswordInput
@@ -82,6 +107,7 @@ export default function Register({ passwordRules, teamInvitation }: Props) {
                                 <InputError message={errors.password} />
                             </div>
 
+                            {/* Confirm Password */}
                             <div className="grid gap-2">
                                 <Label htmlFor="password_confirmation">
                                     Confirm password
@@ -100,6 +126,7 @@ export default function Register({ passwordRules, teamInvitation }: Props) {
                                 />
                             </div>
 
+                            {/* Submit Button */}
                             <Button
                                 type="submit"
                                 className="mt-2 w-full"
@@ -111,6 +138,7 @@ export default function Register({ passwordRules, teamInvitation }: Props) {
                             </Button>
                         </div>
 
+                        {/* Link to Login */}
                         <div className="text-center text-sm text-muted-foreground">
                             Already have an account?{' '}
                             <TextLink
@@ -137,7 +165,11 @@ export default function Register({ passwordRules, teamInvitation }: Props) {
     );
 }
 
+/**
+ * Layout metadata configured for AuthLayout
+ */
 Register.layout = {
     title: 'Create an account',
     description: 'Enter your details below to create your account',
 };
+

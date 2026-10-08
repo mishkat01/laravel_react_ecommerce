@@ -12,13 +12,29 @@ import ManagePasskeys from '@/components/manage-passkeys';
 import type { Props as ManageTwoFactorProps } from '@/components/manage-two-factor';
 import ManageTwoFactor from '@/components/manage-two-factor';
 
-// oxfmt-ignore
+/**
+ * Props passed from Laravel's `SecurityController::edit()`
+ */
 type Props = {
     passwordRules: string;
 } & ManagePasskeysProps &
     ManageTwoFactorProps;
 
+/**
+ * Security Settings Page
+ *
+ * Provides a comprehensive security center:
+ * 1. Password Update Form:
+ *    - `useRef`: programmatic DOM focus for error inputs (`passwordInput`, `currentPasswordInput`).
+ *    - `resetOnError`: automatically clears password fields if submission fails validation.
+ *    - `onError`: inspects backend error bag and shifts user focus to the invalid field.
+ * 2. Two-Factor Authentication (`<ManageTwoFactor>`):
+ *    - TOTP secret generation, QR code scanning, and recovery codes.
+ * 3. Passkeys (`<ManagePasskeys>`):
+ *    - WebAuthn biometric security keys management.
+ */
 export default function Security(props: Props) {
+    // DOM references to automatically shift user cursor to invalid fields on validation failure
     const passwordInput = useRef<HTMLInputElement>(null);
     const currentPasswordInput = useRef<HTMLInputElement>(null);
 
@@ -35,6 +51,7 @@ export default function Security(props: Props) {
                     description="Ensure your account is using a long, random password to stay secure"
                 />
 
+                {/* Password update form targeting SecurityController::update */}
                 <Form
                     {...SecurityController.update.form()}
                     options={{
@@ -47,6 +64,7 @@ export default function Security(props: Props) {
                     ]}
                     resetOnSuccess
                     onError={(errors) => {
+                        // Focus on field with error for better accessibility and UX
                         if (errors.password) {
                             passwordInput.current?.focus();
                         }
@@ -59,6 +77,7 @@ export default function Security(props: Props) {
                 >
                     {({ errors, processing }) => (
                         <>
+                            {/* Current Password Field */}
                             <div className="grid gap-2">
                                 <Label htmlFor="current_password">
                                     Current password
@@ -76,6 +95,7 @@ export default function Security(props: Props) {
                                 <InputError message={errors.current_password} />
                             </div>
 
+                            {/* New Password Field */}
                             <div className="grid gap-2">
                                 <Label htmlFor="password">New password</Label>
 
@@ -92,6 +112,7 @@ export default function Security(props: Props) {
                                 <InputError message={errors.password} />
                             </div>
 
+                            {/* Confirm New Password Field */}
                             <div className="grid gap-2">
                                 <Label htmlFor="password_confirmation">
                                     Confirm password
@@ -111,6 +132,7 @@ export default function Security(props: Props) {
                                 />
                             </div>
 
+                            {/* Save Password Button */}
                             <div className="flex items-center gap-4">
                                 <Button
                                     disabled={processing}
@@ -124,12 +146,14 @@ export default function Security(props: Props) {
                 </Form>
             </div>
 
+            {/* Two-Factor Authentication Management */}
             <ManageTwoFactor
                 canManageTwoFactor={props.canManageTwoFactor}
                 requiresConfirmation={props.requiresConfirmation}
                 twoFactorEnabled={props.twoFactorEnabled}
             />
 
+            {/* WebAuthn Passkeys Management */}
             <ManagePasskeys
                 canManagePasskeys={props.canManagePasskeys}
                 passkeys={props.passkeys}
@@ -138,6 +162,9 @@ export default function Security(props: Props) {
     );
 }
 
+/**
+ * Breadcrumbs configuration
+ */
 Security.layout = {
     breadcrumbs: [
         {
@@ -146,3 +173,4 @@ Security.layout = {
         },
     ],
 };
+

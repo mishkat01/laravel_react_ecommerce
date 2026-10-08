@@ -15,14 +15,31 @@ import {
 import { edit, index } from '@/routes/teams';
 import type { Team } from '@/types';
 
+/**
+ * Props passed from Laravel's `TeamController::index()`
+ */
 type Props = {
     teams: Team[];
 };
 
+/**
+ * Teams Index Page
+ *
+ * Displays all workspaces/teams the authenticated user belongs to.
+ *
+ * Concepts:
+ * 1. Multi-Tenant Role Logic: Inspects `team.role` to determine if user can edit vs view only.
+ * 2. Guardrails: Personal teams and Owner memberships cannot be left (`canLeaveTeam`).
+ * 3. Modal State Lifting: Controls `<LeaveTeamModal>` and `<CreateTeamModal>`.
+ */
 export default function TeamsIndex({ teams }: Props) {
+    // State for the "Leave Team" confirmation dialog
     const [leaveTeamDialogOpen, setLeaveTeamDialogOpen] = useState(false);
     const [teamLeaving, setTeamLeaving] = useState<Team | null>(null);
 
+    /**
+     * Opens confirmation dialog to leave the specified team
+     */
     const openLeaveTeamDialog = (team: Team) => {
         setTeamLeaving(team);
         setLeaveTeamDialogOpen(true);
@@ -35,6 +52,7 @@ export default function TeamsIndex({ teams }: Props) {
             <h1 className="sr-only">Teams</h1>
 
             <div className="flex flex-col space-y-6">
+                {/* Header with New Team creation trigger */}
                 <div className="flex items-center justify-between">
                     <Heading
                         variant="small"
@@ -42,6 +60,7 @@ export default function TeamsIndex({ teams }: Props) {
                         description="Manage your teams and team memberships"
                     />
 
+                    {/* Dialog to create a brand new team */}
                     <CreateTeamModal>
                         <Button data-test="teams-new-team-button">
                             <Plus /> New team
@@ -49,8 +68,10 @@ export default function TeamsIndex({ teams }: Props) {
                     </CreateTeamModal>
                 </div>
 
+                {/* Team cards list */}
                 <div className="space-y-3">
                     {teams.map((team) => {
+                        // Users can only leave non-personal teams where they are not the sole owner
                         const canLeaveTeam =
                             !team.isPersonal && team.role !== 'owner';
 
@@ -80,6 +101,7 @@ export default function TeamsIndex({ teams }: Props) {
 
                                 <TooltipProvider>
                                     <div className="flex items-center gap-2">
+                                        {/* Leave Team Button */}
                                         {canLeaveTeam ? (
                                             <Tooltip>
                                                 <TooltipTrigger asChild>
@@ -102,6 +124,7 @@ export default function TeamsIndex({ teams }: Props) {
                                             </Tooltip>
                                         ) : null}
 
+                                        {/* View or Edit Team Button based on user's role */}
                                         {team.role === 'member' ? (
                                             <Tooltip>
                                                 <TooltipTrigger asChild>
@@ -161,6 +184,7 @@ export default function TeamsIndex({ teams }: Props) {
                 </div>
             </div>
 
+            {/* Leave Team Modal */}
             <LeaveTeamModal
                 team={teamLeaving}
                 open={leaveTeamDialogOpen}
@@ -170,6 +194,9 @@ export default function TeamsIndex({ teams }: Props) {
     );
 }
 
+/**
+ * Breadcrumbs configuration
+ */
 TeamsIndex.layout = {
     breadcrumbs: [
         {
@@ -178,3 +205,4 @@ TeamsIndex.layout = {
         },
     ],
 };
+
