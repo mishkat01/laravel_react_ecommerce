@@ -2,6 +2,7 @@ import { createInertiaApp } from '@inertiajs/react';
 import { Toaster } from '@/components/ui/sonner';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { initializeTheme } from '@/hooks/use-appearance';
+import AdminLayout from '@/layouts/admin-layout';
 import AppLayout from '@/layouts/app-layout';
 import AuthLayout from '@/layouts/auth-layout';
 import SettingsLayout from '@/layouts/settings/layout';
@@ -44,6 +45,14 @@ void createInertiaApp({
             // Authentication screens ('auth/login', 'auth/register', etc.) use AuthLayout
             case name.startsWith('auth/'):
                 return AuthLayout;
+
+            // Admin login screen uses AuthLayout
+            case name === 'admin/login':
+                return AuthLayout;
+
+            // Admin authenticated screens use AdminLayout
+            case name.startsWith('admin/'):
+                return AdminLayout;
 
             // Settings & Team management pages use nested layouts:
             // First wrapped by AppLayout (sidebar + shell), then SettingsLayout (settings nav tabs)

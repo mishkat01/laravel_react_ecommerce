@@ -2,7 +2,4 @@
 
 namespace App\Http\Controllers;
 
-abstract class Controller
-{
-    test
-}
+abstract class Controller {}

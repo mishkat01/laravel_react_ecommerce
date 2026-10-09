@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Models\User;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
 
@@ -56,7 +57,8 @@ class HandleInertiaRequests extends Middleware
     public function share(Request $request): array
     {
         // Get currently authenticated User instance (or null if guest)
-        $user = $request->user();
+        $user = $request->user('web');
+        $admin = $request->user('admin');
 
         return [
             // Merge defaults from Inertia base middleware (e.g. validation errors, flash messages)
@@ -68,16 +70,17 @@ class HandleInertiaRequests extends Middleware
             // Authenticated user object shared with React auth hooks & UI
             'auth' => [
                 'user' => $user,
+                'admin' => $admin,
             ],
 
             // Sidebar open/collapsed state saved in cookie for seamless UI rendering
             'sidebarOpen' => ! $request->hasCookie('sidebar_state') || $request->cookie('sidebar_state') === 'true',
 
             // Active team context (lazily evaluated: only formatted if user is logged in)
-            'currentTeam' => fn () => $user?->currentTeam ? $user->toUserTeam($user->currentTeam) : null,
+            'currentTeam' => fn () => ($user instanceof User && $user->currentTeam) ? $user->toUserTeam($user->currentTeam) : null,
 
             // List of all teams the user belongs to (for team switcher dropdown)
-            'teams' => fn () => $user?->toUserTeams(includeCurrent: true) ?? [],
+            'teams' => fn () => ($user instanceof User) ? $user->toUserTeams(includeCurrent: true) : [],
         ];
     }
 }

@@ -10,8 +10,18 @@ export type User = {
     [key: string]: unknown;
 };
 
+export type Admin = {
+    id: number;
+    name: string;
+    email: string;
+    created_at?: string;
+    updated_at?: string;
+    [key: string]: unknown;
+};
+
 export type Auth = {
-    user: User;
+    user: User | null;
+    admin?: Admin | null;
 };
 
 export type Passkey = {
