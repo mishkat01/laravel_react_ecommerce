@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\Admin;
 use App\Models\Team;
 use App\Models\User;
 use Illuminate\Http\Request;
@@ -20,10 +21,18 @@ class AdminDashboardController extends Controller
             'stats' => [
                 'totalUsers' => User::count(),
                 'totalTeams' => Team::count(),
+                'totalAdmins' => Admin::count(),
             ],
             'recentUsers' => User::latest()
-                ->take(5)
-                ->get(['id', 'name', 'email', 'created_at']),
+                ->take(8)
+                ->get(['id', 'name', 'email', 'email_verified_at', 'created_at']),
+            'systemInfo' => [
+                'phpVersion' => PHP_VERSION,
+                'laravelVersion' => app()->version(),
+                'environment' => app()->environment(),
+                'serverTime' => now()->toIso8601String(),
+                'dbDriver' => config('database.default'),
+            ],
         ]);
     }
 }
