@@ -54,6 +54,7 @@ export function AdminSidebar() {
     const { appearance, updateAppearance } = useAppearance();
     const { state, isMobile } = useSidebar();
 
+    const isCollapsed = state === 'collapsed';
     const adminName = admin?.name || 'Administrator';
     const adminEmail = admin?.email || 'admin@example.com';
 
@@ -72,43 +73,48 @@ export function AdminSidebar() {
                         <SidebarMenuButton
                             size="lg"
                             asChild
+                            tooltip={{ children: 'Admin Portal' }}
                             className="hover:bg-sidebar-accent"
                         >
                             <Link href={dashboard()} className="flex items-center gap-3">
-                                <div className="flex size-9 items-center justify-center rounded-xl bg-linear-to-br from-indigo-500 via-indigo-600 to-purple-600 text-white shadow-md shadow-indigo-500/20">
+                                <div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-linear-to-br from-indigo-500 via-indigo-600 to-purple-600 text-white shadow-md shadow-indigo-500/20">
                                     <AppLogoIcon className="size-5 fill-current" />
                                 </div>
-                                <div className="flex flex-col text-left group-data-[collapsible=icon]:hidden">
-                                    <div className="flex items-center gap-1.5">
-                                        <span className="text-sm font-bold tracking-tight text-sidebar-foreground">
-                                            Admin Portal
+                                {!isCollapsed && (
+                                    <div className="flex flex-col text-left">
+                                        <div className="flex items-center gap-1.5">
+                                            <span className="text-sm font-bold tracking-tight text-sidebar-foreground">
+                                                Admin Portal
+                                            </span>
+                                            <span className="size-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                                        </div>
+                                        <span className="text-[11px] font-medium text-muted-foreground">
+                                            Control Center
                                         </span>
-                                        <span className="size-1.5 rounded-full bg-emerald-500 animate-pulse" />
                                     </div>
-                                    <span className="text-[11px] font-medium text-muted-foreground">
-                                        Control Center
-                                    </span>
-                                </div>
+                                )}
                             </Link>
                         </SidebarMenuButton>
                     </SidebarMenuItem>
                 </SidebarMenu>
 
                 {/* Status pill in expanded mode */}
-                <div className="mt-1 px-2 group-data-[collapsible=icon]:hidden">
-                    <div className="flex items-center justify-between rounded-lg border border-emerald-500/20 bg-emerald-500/10 px-2.5 py-1.5 text-xs text-emerald-600 dark:text-emerald-400">
-                        <span className="flex items-center gap-1.5 font-medium">
-                            <ShieldCheck className="size-3.5" />
-                            <span>Admin Guard</span>
-                        </span>
-                        <Badge
-                            variant="outline"
-                            className="border-emerald-500/30 bg-background/50 px-1.5 py-0 font-mono text-[10px] text-emerald-600 dark:text-emerald-400"
-                        >
-                            auth:admin
-                        </Badge>
+                {!isCollapsed && (
+                    <div className="mt-1 px-2">
+                        <div className="flex items-center justify-between rounded-lg border border-emerald-500/20 bg-emerald-500/10 px-2.5 py-1.5 text-xs text-emerald-600 dark:text-emerald-400">
+                            <span className="flex items-center gap-1.5 font-medium">
+                                <ShieldCheck className="size-3.5" />
+                                <span>Admin Guard</span>
+                            </span>
+                            <Badge
+                                variant="outline"
+                                className="border-emerald-500/30 bg-background/50 px-1.5 py-0 font-mono text-[10px] text-emerald-600 dark:text-emerald-400"
+                            >
+                                auth:admin
+                            </Badge>
+                        </div>
                     </div>
-                </div>
+                )}
             </SidebarHeader>
 
             {/* Content: Organized Admin Navigation */}
@@ -129,9 +135,9 @@ export function AdminSidebar() {
                                         <span>Dashboard</span>
                                     </Link>
                                 </SidebarMenuButton>
-                                <SidebarMenuBadge className="group-data-[collapsible=icon]:hidden">
-                                    Live
-                                </SidebarMenuBadge>
+                                {!isCollapsed && (
+                                    <SidebarMenuBadge>Live</SidebarMenuBadge>
+                                )}
                             </SidebarMenuItem>
 
                             <SidebarMenuItem>
@@ -208,9 +214,11 @@ export function AdminSidebar() {
                                         <span>System Health</span>
                                     </a>
                                 </SidebarMenuButton>
-                                <SidebarMenuBadge className="text-emerald-500 group-data-[collapsible=icon]:hidden">
-                                    99.9%
-                                </SidebarMenuBadge>
+                                {!isCollapsed && (
+                                    <SidebarMenuBadge className="text-emerald-500">
+                                        99.9%
+                                    </SidebarMenuBadge>
+                                )}
                             </SidebarMenuItem>
 
                             <SidebarMenuItem>
@@ -248,7 +256,9 @@ export function AdminSidebar() {
                                             <Store className="size-4 text-muted-foreground group-hover/link:text-foreground" />
                                             <span>Live Storefront</span>
                                         </div>
-                                        <ExternalLink className="size-3 text-muted-foreground group-data-[collapsible=icon]:hidden" />
+                                        {!isCollapsed && (
+                                            <ExternalLink className="size-3 text-muted-foreground" />
+                                        )}
                                     </a>
                                 </SidebarMenuButton>
                             </SidebarMenuItem>
@@ -260,12 +270,14 @@ export function AdminSidebar() {
             {/* Footer: Admin Profile & Session Actions */}
             <SidebarFooter className="border-t border-sidebar-border/60 pt-2">
                 {/* Mini System Info in expanded mode */}
-                <div className="rounded-lg bg-sidebar-accent/50 p-2.5 text-[11px] text-muted-foreground group-data-[collapsible=icon]:hidden">
-                    <div className="flex items-center justify-between font-mono">
-                        <span>PHP 8.5 • Laravel 12</span>
-                        <span className="text-emerald-500 font-semibold">Online</span>
+                {!isCollapsed && (
+                    <div className="rounded-lg bg-sidebar-accent/50 p-2.5 text-[11px] text-muted-foreground">
+                        <div className="flex items-center justify-between font-mono">
+                            <span>PHP 8.5 • Laravel 12</span>
+                            <span className="text-emerald-500 font-semibold">Online</span>
+                        </div>
                     </div>
-                </div>
+                )}
 
                 <SidebarMenu>
                     <SidebarMenuItem>
@@ -273,22 +285,27 @@ export function AdminSidebar() {
                             <DropdownMenuTrigger asChild>
                                 <SidebarMenuButton
                                     size="lg"
+                                    tooltip={{ children: adminName }}
                                     className="data-[state=open]:bg-sidebar-accent group"
                                 >
-                                    <Avatar className="size-8 rounded-lg border border-border">
+                                    <Avatar className="size-8 shrink-0 rounded-lg border border-border">
                                         <AvatarFallback className="rounded-lg bg-indigo-500/10 text-xs font-bold text-indigo-600 dark:text-indigo-400">
                                             {getInitials(adminName)}
                                         </AvatarFallback>
                                     </Avatar>
-                                    <div className="grid flex-1 text-left text-xs leading-tight group-data-[collapsible=icon]:hidden">
-                                        <span className="truncate font-semibold text-sidebar-foreground">
-                                            {adminName}
-                                        </span>
-                                        <span className="truncate text-[10px] text-muted-foreground">
-                                            {adminEmail}
-                                        </span>
-                                    </div>
-                                    <ChevronsUpDown className="ml-auto size-4 group-data-[collapsible=icon]:hidden" />
+                                    {!isCollapsed && (
+                                        <>
+                                            <div className="grid flex-1 text-left text-xs leading-tight">
+                                                <span className="truncate font-semibold text-sidebar-foreground">
+                                                    {adminName}
+                                                </span>
+                                                <span className="truncate text-[10px] text-muted-foreground">
+                                                    {adminEmail}
+                                                </span>
+                                            </div>
+                                            <ChevronsUpDown className="ml-auto size-4" />
+                                        </>
+                                    )}
                                 </SidebarMenuButton>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent
@@ -297,7 +314,7 @@ export function AdminSidebar() {
                                 side={
                                     isMobile
                                         ? 'bottom'
-                                        : state === 'collapsed'
+                                        : isCollapsed
                                           ? 'right'
                                           : 'top'
                                 }
