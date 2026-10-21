@@ -27,5 +27,7 @@ class DatabaseSeeder extends Seeder
             'name' => 'Admin User',
             'email' => 'admin@example.com',
         ]);
+
+        $this->call(StorefrontSeeder::class);
     }
 }

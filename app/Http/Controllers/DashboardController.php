@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\OrderStatus;
+use App\Http\Resources\OrderResource;
 use App\Models\TeamInvitation;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -64,8 +66,22 @@ class DashboardController extends Controller
          * - Argument 1: Page component name ('dashboard' -> resources/js/pages/dashboard.tsx)
          * - Argument 2: Associative array of props passed directly to the React component
          */
+        $user = $request->user();
+
         return Inertia::render('dashboard', [
             'pendingInvitations' => $pendingInvitations,
+            // Customer shopping summary shown above the dashboard content
+            'orderStats' => [
+                'orders' => $user->orders()->count(),
+                'openOrders' => $user->orders()
+                    ->whereIn('status', [OrderStatus::Pending, OrderStatus::Processing, OrderStatus::Shipped])
+                    ->count(),
+                'totalSpent' => (float) $user->orders()->where('status', '!=', OrderStatus::Cancelled)->sum('total'),
+                'wishlist' => $user->wishlist()->count(),
+            ],
+            'recentOrders' => OrderResource::collection(
+                $user->orders()->withCount('items')->latest()->take(5)->get(),
+            )->resolve($request),
         ]);
     }
 }

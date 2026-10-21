@@ -3,6 +3,7 @@
 namespace App\Http\Middleware;
 
 use App\Models\User;
+use App\Services\StorefrontSettings;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
 
@@ -66,6 +67,9 @@ class HandleInertiaRequests extends Middleware
 
             // Application name from config/app.php
             'name' => config('app.name'),
+
+            // Admin-editable store identity (name, currency, shipping rules) used to brand and format prices
+            'store' => fn () => app(StorefrontSettings::class)->section('store'),
 
             // Authenticated user object shared with React auth hooks & UI
             'auth' => [
